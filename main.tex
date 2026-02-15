@@ -1,14 +1,251 @@
-\documentclass{article}
-\usepackage{graphicx} % Required for inserting images
+\documentclass[12pt,a4paper,dvipsnames]{article}
 
-\title{MLMD}
-\author{Anand Shah}
-\date{February 2026}
+% ============================================================
+% NBER Working Paper Format
+% ============================================================
+
+% ----- Page layout -----
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+
+% ----- Fonts & encoding -----
+\usepackage[T1]{fontenc}
+\usepackage{mathptmx} % Times New Roman-like font
+
+% ----- Math -----
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+
+% ----- Graphics & figures -----
+\usepackage{graphicx}
+\usepackage{pdfpages}
+\usepackage{float}
+
+% ----- Tables -----
+\usepackage{longtable}
+\usepackage{threeparttable}
+\usepackage{booktabs,tabularx,dcolumn}
+
+% ----- TikZ -----
+\usepackage{tikz}
+\usetikzlibrary{automata, positioning}
+
+% ----- Colors & hyperlinks -----
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue]{hyperref}
+
+% ----- Code listings -----
+\usepackage{listings}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2}
+\lstset{style=mystyle}
+
+% ----- Misc packages -----
+\usepackage{gensymb}
+\usepackage{relsize}
+\usepackage{parskip}
+
+% ----- Bibliography -----
+\usepackage[citestyle=authoryear,natbib=true,backend=bibtex]{biblatex}
+\renewcommand\nameyeardelim{, }
+\addbibresource{bibliography.bib}
+
+% ============================================================
+% Custom commands & macros
+% ============================================================
+
+% Colored box
+\newcommand\crule[3][black]{\textcolor{#1}{\rule{#2}{#3}}}
+
+% Contradiction symbol
+\newcommand{\contradiction}{{\hbox{%
+    \setbox0=\hbox{$\mkern-3mu\times\mkern-3mu$}%
+    \setbox1=\hbox to0pt{\hss$\times$\hss}%
+    \copy0\raisebox{0.5\wd0}{\copy1}\raisebox{-0.5\wd0}{\box1}\box0
+}}}
+
+% Argmax / Argmin
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+% Theorem environments
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+
+% Matrix stretch
+\makeatletter
+\renewcommand*\env@matrix[1][\arraystretch]{%
+  \edef\arraystretch{#1}%
+  \hskip -\arraycolsep
+  \let\@ifnextchar\new@ifnextchar
+  \array{*\c@MaxMatrixCols c}}
+\makeatother
+
+% Math shortcuts
+\def\uu{\mathbf{u}}
+\def\vv{\mathbf{v}}
+\def\ww{\mathbf{w}}
+\def\im{\mathrm{im}}
+\def\H{\mathbf{H}}
+\def\qbar{\overline{q}}
+\def\SO{\mathrm{SO}}
+\def\OO{\mathrm{O}}
+\def\ZZ{\mathrm{Z}}
+\def\B{\mathcal{B}}
+\def\C{\mathbf{C}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\L{\mathbb{L}}
+\def\N{\mathbb{N}}
+\def\R{\mathbb{R}}
+\def\Q{\mathbf{Q}}
+\def\Z{\mathbf{Z}}
+\def\X{\mathcal{X}}
+\def\F{\mathbf{F}}
+\def\GL{\mathrm{GL}}
+\def\SL{\mathrm{SL}}
+\def\PGL{\mathrm{PGL}}
+\def\PSL{\mathrm{PSL}}
+\def\Aut{\mathrm{Aut}}
+\def\Inn{\mathrm{Inn}}
+\def\Out{\mathrm{Out}}
+\def\xbar{\overline{x}}
+\def\ybar{\overline{y}}
+\def\RO{\mathrm{RO}}
+\renewcommand{\qedsymbol}{$\blacksquare$}
+
+% Comment command (red text)
+\newcommand{\comment}{\textcolor{red}}
+
+% ============================================================
+% Document
+% ============================================================
 
 \begin{document}
 
-\maketitle
+% ----- Title page (NBER working paper style) -----
+\begin{titlepage}
+\begin{center}
 
+\vspace*{0.5in}
+
+{\Large \textbf{NBER WORKING PAPER SERIES}}
+
+\vspace{0.75in}
+
+{\LARGE \textbf{MACHINE LEARNING FOR RESEARCH DESIGN\\FOR MARKET DESIGN (FOR PNAS)}}
+
+\vspace{0.5in}
+
+{\large
+Anand Shah\\
+}
+
+\vspace{0.25in}
+
+{\large Working Paper XXXXX}\\
+
+\vspace{0.1in}
+
+\url{http://www.nber.org/papers/wXXXXX}
+
+\vspace{0.5in}
+
+{\large NATIONAL BUREAU OF ECONOMIC RESEARCH\\
+1050 Massachusetts Avenue\\
+Cambridge, MA 02138\\
+February 2026}
+
+\vspace{0.5in}
+
+\end{center}
+
+\vfill
+
+\noindent\footnotesize{The views expressed herein are those of the author and do not necessarily reflect the views of the National Bureau of Economic Research.}
+
+\end{titlepage}
+
+% ----- Abstract page -----
+\newpage
+\begin{center}
+{\LARGE \textbf{MACHINE LEARNING FOR RESEARCH DESIGN\\FOR MARKET DESIGN (FOR PNAS)}}
+
+\vspace{0.3in}
+
+{\large Anand Shah}
+
+\vspace{0.3in}
+\end{center}
+
+\begin{abstract}
+\noindent
+Abstract goes here.
+
+\vspace{0.25in}
+
+\noindent \textbf{JEL Classification:} XXX, XXX
+
+\noindent \textbf{Keywords:} keyword1, keyword2, keyword3
+
+\vspace{0.25in}
+
+\noindent Anand Shah\\
+Affiliation\\
+Address\\
+Email: \href{mailto:email@example.com}{email@example.com}
+\end{abstract}
+
+\newpage
+
+% ----- Body -----
 \section{Introduction}
+
+\section{Literature Review}
+
+\section{Data}
+
+\section{Methodology}
+
+\section{Results}
+
+\section{Discussion}
+
+\section{Conclusion}
+
+% ----- References -----
+\newpage
+\printbibliography
+
+% ----- Appendix -----
+% \newpage
+% \appendix
+% \section{Appendix}
 
 \end{document}
