@@ -148,82 +148,126 @@
 % ----- Body -----
 
 % ============================================================
-% ACT 1: The Benchmark — p^DA
+% Introduction
 % ============================================================
 \section{Introduction}
 
-We propose a framework for auditing centralized school assignment mechanisms using machine learning. The core idea is simple: if a mechanism operates as designed, then a machine learning model trained on the mechanism's official inputs should predict assignment just as well as one trained on a richer set of covariates. Deviations between the two reveal where — and how — the mechanism's implementation departs from its stated rules.
+We propose a framework for auditing centralized school assignment mechanisms using machine learning. The core idea is simple: if a mechanism operates as designed, then a machine learning model trained on the mechanism's official inputs should predict assignment just as well as one trained on a richer set of covariates. Deviations between the two reveal where --- and how --- the mechanism's implementation departs from its stated rules.
 
-We develop this idea in the context of Denver Public Schools (DPS), which runs a variant of deferred acceptance (DA) for school choice. We structure the paper in three acts.
+We develop this idea in the context of Denver Public Schools (DPS), which runs a variant of deferred acceptance (DA) for school choice. The paper proceeds in three steps.
 
-\bigskip
-\noindent \textbf{Act 1} establishes the benchmark. We compute $\hat{p}^{DA}$ — the probability that each student is assigned to each school — directly from the known mechanism: submitted preferences, priorities, lottery numbers, and capacities. These propensity scores are the intellectual contribution of the Market Design for Research Design (MDRD) framework. They are computed by simulating the DA algorithm across lottery draws and are well-understood, analytically grounded, and trusted. We take these as our point of departure.
+First, we establish the benchmark. We take $\hat{p}^{DA}$ --- the probability that each student is assigned to each school --- as computed directly from the known mechanism using the Market Design for Research Design (MDRD) framework of Abdulkadiro\u{g}lu et al.\ (2017). These propensity scores are derived from submitted preferences, priority structures, school capacities, and the distribution of applicant types, and are computed by simulating the DA algorithm across lottery draws. They are analytically grounded, well-understood, and trusted. We take them as our point of departure.
+
+Second, we train ML models to predict assignment in two cuts of increasing covariate richness, producing $\hat{p}^{ML}_1$ and $\hat{p}^{ML}_2$.
+
+Third, we compare $\hat{p}^{DA}$, $\hat{p}^{ML}_1$, and $\hat{p}^{ML}_2$ on predicting actual assignment, evaluated using a proper scoring rule. The pattern of results tells us whether the mechanism operates as advertised.
 
 % ============================================================
-% ACT 2: The ML Propensity Scores — p^ML
+% The MDRD Benchmark
+% ============================================================
+\section{The MDRD Benchmark: $\hat{p}^{DA}$}
+
+The MDRD framework derives the propensity score for school assignment from the structure of the DA algorithm. Under DA, a student's assignment depends on three objects: (i) their submitted preference ranking over schools, (ii) their priority status at each school (e.g., sibling priority, neighborhood priority), and (iii) a randomly drawn lottery number used to break ties among students with equal priority. Student \textit{type} $\theta_i = (\succ_i, \rho_i)$ is defined as the combination of preferences and priorities. Conditional on type, assignment is determined entirely by the lottery draw, which is i.i.d.\ uniform and independent of all student characteristics. This is the conditional independence property:
+\[
+D_i(s) \perp W_i \mid \theta_i,
+\]
+where $D_i(s)$ indicates assignment to school $s$ and $W_i$ is any variable not determined by the lottery. By Rosenbaum and Rubin (1983), conditioning on the propensity score $p_s(\theta) = \Pr[D_i(s) = 1 \mid \theta_i = \theta]$ is sufficient to eliminate selection bias.
+
+The key contribution of MDRD is Theorem 1, which provides a closed-form expression for $p_s(\theta)$ in the large-market limit. The score depends on a small number of intermediate quantities: marginal priority status at $s$, the lottery cutoff $\tau_s$, and the \textit{most informative disqualification} (MID) --- the most forgiving cutoff at schools the student prefers to $s$. This structure pools many distinct types into a tractable number of strata, dramatically expanding the quasi-experimental sample relative to first-choice or full-type conditioning strategies.
+
+In practice, $\hat{p}^{DA}$ is computed either by simulation (running DA across a large number of lottery draws and recording average assignment rates by type) or by plugging sample analogs of the formula inputs into Theorem 1. Both approaches require complete knowledge of preferences, priorities, and capacities.
+
+\textit{Assumptions.} The validity of $\hat{p}^{DA}$ rests on three assumptions: (a) lottery numbers are i.i.d.\ uniform and independent of type; (b) the mechanism is exactly DA as specified (including the correct variant --- single vs.\ multiple tie-breaking, seat reservations, family link rules); and (c) priority structures are correctly coded. If any of these fail --- for example, if a district informally adjusts assignments after the algorithm runs --- $\hat{p}^{DA}$ does not equal the true assignment probability.
+
+% ============================================================
+% ML Propensity Scores
 % ============================================================
 \section{Machine Learning Propensity Scores}
 
-\noindent \textbf{Act 2} trains ML models to predict assignment, but we do it twice — two cuts of increasing covariate richness.
+We train ML models to predict assignment, producing two sets of propensity scores corresponding to two cuts of the covariate space.
 
-\subsection{Cut 1: Mechanism Inputs Only}
+\subsection{Cut 1: Mechanism Inputs Only ($\hat{p}^{ML}_1$)}
 
-We train a model using only the variables the mechanism officially uses — preferences, priorities, capacities, cohort composition — everything except the lottery number itself. This asks: can ML learn the mechanism's own probability function from its own inputs?
+Cut 1 uses only the variables that the DA mechanism officially processes: the student's preference ranking, priority status at each school, school capacities, and the composition of the applicant pool (e.g., number of applicants by priority group at each school). We deliberately \textit{exclude} the lottery number, since we are learning the probability of assignment, not the realization.
 
-If $\hat{p}^{ML}_1 \approx \hat{p}^{DA}$, we have confirmed that ML can emulate the algorithm. If it cannot, our model or features are not rich enough. This cut is primarily a validation exercise — it should work, and it establishes that our ML pipeline is competent.
+This cut asks: can ML learn the mechanism's own probability function from its own inputs? Under the MDRD assumptions, the propensity score $p_s(\theta)$ is a deterministic function of exactly these inputs. If our ML model is flexible enough, we should have $\hat{p}^{ML}_1 \approx \hat{p}^{DA}$. If Cut 1 fails to match $\hat{p}^{DA}$, either the model is insufficiently flexible or the features do not fully capture $\theta$. This cut is primarily a validation exercise: it establishes that our ML pipeline is competent before we use it for the substantive test.
 
-\subsection{Cut 2: Mechanism Inputs Plus Exhaust}
+\subsection{Cut 2: Mechanism Inputs Plus Exhaust ($\hat{p}^{ML}_2$)}
 
-We now augment the feature set with variables the mechanism is \textit{not supposed to use}: demographics, test scores, neighborhood characteristics, income proxies, distance to schools, and other student-level covariates available in the Denver data.
+Cut 2 augments the Cut 1 feature set with variables the mechanism is \textit{not supposed to use}: student demographics (race, gender, free/reduced lunch status), prior test scores, neighborhood characteristics, distance to schools, income proxies, and other student-level covariates available in the Denver data.
 
-This is where the science happens. The question is: does the extra information help predict assignment \textit{on top of} Cut 1? If the mechanism operates as advertised, these variables should have no additional predictive power once we condition on the official inputs.
+The key question is whether these additional covariates improve prediction \textit{on top of} Cut 1. At first glance, one might expect a richer feature set to always improve prediction. But under the MDRD assumptions, this should not happen. The conditional independence property $D_i(s) \perp W_i \mid \theta_i$ implies that demographics, test scores, and other non-mechanism variables have \textit{zero} additional predictive power once we condition on the mechanism inputs. Cut 2 can beat Cut 1 only if (a) the mechanism does not operate as designed, or (b) the exhaust variables proxy for mechanism inputs that are imperfectly captured in Cut 1.
 
-% ============================================================
-% ACT 3: The Horse Race
-% ============================================================
-\section{The Horse Race}
-
-\noindent \textbf{Act 3} compares $\hat{p}^{DA}$, $\hat{p}^{ML}_1$ (Cut 1), and $\hat{p}^{ML}_2$ (Cut 2) on predicting actual assignment outcomes, evaluated using a proper scoring rule. Three families of results emerge:
-
-\subsection{Result A: Cut 2 Does Not Beat Cut 1}
-
-The exhaust covariates add nothing. The mechanism is operating as advertised — the lottery is doing its job, and the official inputs are sufficient statistics for assignment. This is a strong positive result: we have validated MDRD's identifying assumptions \textit{empirically}, not merely assumed them. For a PNAS audience, the message is: ``centralized assignment really does function like an experiment.''
-
-\subsection{Result B: Cut 1 Cannot Match $\hat{p}^{DA}$}
-
-We do not have enough information in our features to learn the mechanism's probability function. With the Denver data — where we have essentially complete mechanism inputs — this is unlikely. But if it occurred in another district, it would signal that the available data are insufficient for credible causal inference there. This is useful to know \textit{before} attempting to estimate treatment effects.
-
-\subsection{Result C: Cut 2 Beats Cut 1}
-
-The exhaust variables have predictive power they should not have. Something outside the official rules is influencing assignment. We then open the black box: which variables are driving the improvement? Which schools? Which student types? We generate specific hypotheses about where the mechanism departs from its stated design, and test them directly. This is the finding that commands attention, because it implies that districts claiming to run clean DA may be doing something else entirely.
+\textit{What must be excluded from Cut 2.} The lottery number itself (and any variable that is a deterministic function of it, such as assignment outcomes at other schools in the same round) must never enter Cut 2. Including the lottery realization would trivially improve prediction and tell us nothing about mechanism integrity. Everything else --- any pre-lottery student or school characteristic --- is fair game, because the whole point is to test whether such variables predict assignment when they should not.
 
 % ============================================================
 % Data & Setting
 % ============================================================
 \section{Data and Setting}
 
-We use student-level administrative data from Denver Public Schools. The data contain submitted preference lists, priority structures, lottery numbers, assignment outcomes, and a rich set of student demographics and academic records. We also observe neighborhood-level characteristics and school-level attributes. This combination gives us both the official mechanism inputs needed to compute $\hat{p}^{DA}$ and the auxiliary covariates needed for Cut 2.
+We use student-level administrative data from Denver Public Schools. The data contain submitted preference lists, priority structures, lottery numbers, assignment outcomes, and a rich set of student demographics and academic records. We also observe neighborhood-level characteristics and school-level attributes. This combination gives us both the official mechanism inputs needed to compute $\hat{p}^{DA}$ (and to construct Cut 1 features) and the auxiliary covariates needed for Cut 2.
+
+\comment{[To be filled: sample description, years, grades, summary statistics.]}
 
 % ============================================================
 % Methodology
 % ============================================================
 \section{Methodology}
 
-\comment{[To be filled: ML model specification, proper scoring rule choice, cross-validation strategy, variable importance methods for diagnosing Result C.]}
+\subsection{Prediction Task}
+
+For each student-school pair $(i, s)$ where student $i$ has ranked school $s$, we predict the binary outcome $D_i(s) \in \{0, 1\}$ indicating whether $i$ was assigned to $s$. The predicted probability is our ML propensity score $\hat{p}^{ML}$.
+
+\subsection{Model}
+
+We use gradient-boosted decision trees (XGBoost) as our primary learner. Gradient boosting is the canonical choice for tabular prediction tasks: it handles mixed feature types, captures nonlinearities and interactions, and produces well-calibrated probabilities with minimal tuning. We cross-validate using $K$-fold cross-fitting to avoid overfitting: the model is trained on $K-1$ folds and predictions are generated for the held-out fold, so that each student's $\hat{p}^{ML}$ is an out-of-sample prediction.
+
+\subsection{Features}
+
+\textit{Cut 1 features} (mechanism inputs): rank of school $s$ on student $i$'s preference list; priority group of $i$ at $s$; capacity of $s$; total number of applicants to $s$; number of applicants to $s$ by priority group; number of schools ranked by $i$; identities of schools ranked (one-hot or embedding); whether $i$ has a neighborhood school assignment.
+
+\textit{Cut 2 features} (mechanism inputs $+$ exhaust): all Cut 1 features plus: race/ethnicity, gender, free/reduced lunch eligibility, prior standardized test scores (math, reading), home-to-school distance, census tract characteristics (median income, poverty rate, educational attainment), school-level characteristics (enrollment, percent FRL, prior achievement levels).
+
+\subsection{Evaluation}
+
+We compare $\hat{p}^{DA}$, $\hat{p}^{ML}_1$, and $\hat{p}^{ML}_2$ using the \textit{Brier score}:
+\[
+BS = \frac{1}{N} \sum_{i,s} \left( D_i(s) - \hat{p}(i,s) \right)^2,
+\]
+which is a proper scoring rule --- it is minimized by the true conditional probability $\Pr[D_i(s) = 1 \mid X_i]$. We also report log loss as a robustness check. The comparison is:
+\begin{itemize}
+    \item $BS(\hat{p}^{ML}_1)$ vs.\ $BS(\hat{p}^{DA})$: Does ML recover the mechanism's own propensity score? (Calibration check.)
+    \item $BS(\hat{p}^{ML}_2)$ vs.\ $BS(\hat{p}^{ML}_1)$: Does the exhaust improve prediction? (The test.)
+    \item If $\hat{p}^{ML}_2$ improves on $\hat{p}^{ML}_1$: SHAP values or permutation importance to identify which exhaust variables drive the improvement, at which schools, and for which student types.
+\end{itemize}
 
 % ============================================================
 % Results
 % ============================================================
 \section{Results}
 
-\comment{[To be filled: horse race results, scoring rule comparisons, variable importance decomposition if Result C obtains.]}
+We compare the three sets of propensity scores on predicting actual assignment outcomes. Three families of results are possible:
+
+\subsection{$\hat{p}^{ML}_2 \approx \hat{p}^{ML}_1$: Mechanism Validated}
+
+The exhaust covariates add nothing on top of the mechanism inputs. The mechanism is operating as advertised --- the lottery is doing its job, and the official inputs are sufficient statistics for assignment. This is a strong positive result: we have validated MDRD's identifying assumptions \textit{empirically}, not merely assumed them. For a PNAS audience, the message is: ``centralized assignment really does function like an experiment.''
+
+\subsection{$\hat{p}^{ML}_1 \not\approx \hat{p}^{DA}$: Insufficient Information}
+
+ML trained on mechanism inputs cannot recover the MDRD propensity score. With the Denver data --- where we have essentially complete mechanism inputs --- this is unlikely. But if it occurred in another district, it would signal that the available data are insufficient to reconstruct the mechanism's probability function. This is useful to know \textit{before} attempting to do causal inference with these propensity scores.
+
+\subsection{$\hat{p}^{ML}_2 > \hat{p}^{ML}_1$: Mechanism Deviation Detected}
+
+The exhaust variables have predictive power they should not have. Something outside the official rules is influencing assignment. We then open the black box: which variables are driving the improvement? Which schools? Which student types? We generate specific hypotheses about where the mechanism departs from its stated design, and test them directly. This is the finding that commands attention, because it implies that districts claiming to run clean DA may be doing something else entirely.
+
+\comment{[To be filled: actual results, tables, figures.]}
 
 % ============================================================
 % Policy Implications
 % ============================================================
 \section{Policy Implications}
 
-Result C, if it obtains, has direct policy relevance. We are essentially building a tool that can detect when districts put a thumb on the scale. Every district that runs ``DA'' but makes informal adjustments — for demographic balance, for principal preferences, for political pressure — is potentially detectable. This is an accountability tool, and it scales to any district where we have student-level data on assignment outcomes and covariates, even without access to the mechanism's source code.
+If we detect that $\hat{p}^{ML}_2 > \hat{p}^{ML}_1$, the finding has direct policy relevance. We are essentially building a tool that can detect when districts put a thumb on the scale. Every district that runs ``DA'' but makes informal adjustments --- for demographic balance, for principal preferences, for political pressure --- is potentially detectable. This is an accountability tool, and it scales to any district where we have student-level data on assignment outcomes and covariates, even without access to the mechanism's source code.
 
 % ============================================================
 % Conclusion
