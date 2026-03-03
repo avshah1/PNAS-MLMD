@@ -10,17 +10,23 @@
 \setbeamertemplate{itemize items}[circle]
 \setbeamertemplate{enumerate items}[default]
 
-% Colors
-\definecolor{navy}{HTML}{1F4E79}
-\definecolor{accent}{HTML}{2E75B6}
-\definecolor{muted}{HTML}{777777}
-\definecolor{darkred}{HTML}{C0392B}
+% Colors — nature-toned palette
+\definecolor{charcoal}{HTML}{2C3E3A}       % deep forest, for titles
+\definecolor{sage}{HTML}{5B7B6A}           % muted sage, for accents
+\definecolor{clay}{HTML}{B07D62}           % warm clay, for emphasis
+\definecolor{muted}{HTML}{8C8C8C}          % neutral gray, for footnotes
+\definecolor{sand}{HTML}{F5F0EB}           % warm off-white, for callout boxes
+\definecolor{darkred}{HTML}{9B4D3A}        % earthy red, for bias highlight
 
-\setbeamercolor{frametitle}{fg=navy}
+% Aliases for backward compat in body
+\colorlet{navy}{charcoal}
+\colorlet{accent}{sage}
+
+\setbeamercolor{frametitle}{fg=charcoal}
 \setbeamercolor{title}{fg=white}
-\setbeamercolor{itemize item}{fg=accent}
-\setbeamercolor{enumerate item}{fg=accent}
-\setbeamercolor{normal text}{fg=black}
+\setbeamercolor{itemize item}{fg=sage}
+\setbeamercolor{enumerate item}{fg=sage}
+\setbeamercolor{normal text}{fg=charcoal}
 
 % Fonts
 \usefonttheme{professionalfonts}
@@ -45,19 +51,19 @@
 % TITLE
 % =====================================================================
 {
-\setbeamercolor{background canvas}{bg=navy}
+\setbeamercolor{background canvas}{bg=charcoal}
 \begin{frame}[plain]
 \vspace{2cm}
 {\usebeamerfont{title}\usebeamercolor[fg]{title}\inserttitle}
 
 \vspace{0.3cm}
-{\color{accent!60!white}\hrule height 2pt}
+{\color{clay}\hrule height 1.5pt}
 \vspace{0.3cm}
 
 {\color{white!80}\insertsubtitle}
 
 \vspace{1.5cm}
-{\color{white!70}\small\insertauthor\hspace{2cm}\insertdate}
+{\color{white!60}\small\insertauthor\hspace{2cm}\insertdate}
 \end{frame}
 }
 
@@ -84,8 +90,8 @@ If correctly specified, both estimate $P(\text{offer} \mid \text{type } \theta_i
 
 \vspace{0.5cm}
 \begin{center}
-\colorbox{accent!10}{%
-\parbox{0.8\textwidth}{\centering\textbf{Result: They disagree.
+\colorbox{sand}{%
+\parbox{0.8\textwidth}{\centering\color{charcoal}\textbf{Result: They disagree.
 Understanding why is the point of this talk.}}}
 \end{center}
 \end{frame}
@@ -139,9 +145,9 @@ for marginal students}
 \end{center}
 
 \vspace{-0.3cm}
-{\small\color{navy}\textbf{Brier score:}
+{\small\color{charcoal}\textbf{Brier score:}
 $\hat{p}^{ML}_1 = 0.024$ vs $\hat{p}^{DA} = 0.060$.
-ML is 2.5$\times$ more accurate.}
+ML is {\color{clay}2.5$\times$} more accurate.}
 \end{frame}
 
 % =====================================================================
