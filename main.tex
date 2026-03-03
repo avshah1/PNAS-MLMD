@@ -184,8 +184,6 @@ We use student-level administrative data from Denver Public Schools. The data co
 
 The outcome variable $D_i(s)$ is the first-round DA offer indicator --- whether student $i$ was offered a seat at school $s$ in the initial round of SchoolChoice. We focus on first-round offers because only the first round uses DA; the second round is an ad hoc school-by-school process unrelated to the lottery.
 
-\comment{[To be filled: sample description, years, grades, summary statistics, bucket structure details.]}
-
 \section{Methodology}
 
 \subsection{Computing $\hat{p}^{DA}$}
@@ -222,13 +220,11 @@ where the sum is over all pairs $(i,s)$ in which student $i$ ranked school $s$, 
 
 \section{Results}
 
-\comment{[To be filled: actual results, tables, figures.]}
-
 \noindent Three families of results are possible:
 
 \subsection{$\hat{p}^{ML}_2 \approx \hat{p}^{ML}_1$: No Deviation Detected}
 
-The exhaust covariates add nothing on top of the mechanism inputs. The DA propensity score $\hat{p}^{DA}$, as computed by the researcher from the administrative data, is well-calibrated to observed offers. The MDRD assumptions are validated \textit{empirically}, not merely maintained. For a PNAS audience, the message is direct: ``centralized assignment really does function like an experiment, and the propensity scores that underpin causal inference in this setting are reliable.''
+The exhaust covariates add nothing on top of the mechanism inputs. The DA propensity score $\hat{p}^{DA}$, as computed by the researcher from the administrative data, is well-calibrated to observed offers. The MDRD assumptions are validated \textit{empirically}, not merely maintained. The message is clear in this branch: ``centralized assignment really does function like an experiment, and the propensity scores that underpin causal inference in this setting are reliable.''
 
 \subsection{$\hat{p}^{ML}_2 > \hat{p}^{ML}_1$: Deviation Detected}
 
@@ -258,7 +254,6 @@ For researchers, the audit is a prerequisite for credible MDRD-based causal infe
 
 \section{Conclusion}
 
-\comment{[To be filled.]}
 
 \newpage
 \printbibliography
